@@ -12,15 +12,8 @@ import SideSign
 enum AnisetteProvider {
     static func fetch(handler: AnisetteServerHandler? = nil) async throws -> ALTAnisetteData {
         if UserDefaults.standard.useOnDeviceAnisette {
-            debugLog("[AnisetteProvider] Attempting On-Device Anisette (ODA)...")
-            do {
-                let data = try await OnDeviceAnisetteManager.shared.fetchAnisetteData()
-                debugLog("[AnisetteProvider] On-Device Anisette succeeded.")
-                return data
-            } catch {
-                debugLog("[AnisetteProvider] On-Device Anisette failed (\(error.localizedDescription)). Seamlessly falling back to remote Anisette servers...")
-                return try await fetchRemote(handler: handler)
-            }
+            debugLog("[AnisetteProvider] Fetching anisette via On-Device Anisette (ODA)...")
+            return try await OnDeviceAnisetteManager.shared.fetchAnisetteData()
         } else {
             debugLog("[AnisetteProvider] Fetching anisette via remote server...")
             return try await fetchRemote(handler: handler)

@@ -3,7 +3,7 @@
 [submodule "Dependencies/minimuxer"]
     path = Dependencies/minimuxer
     url = https://github.com/mahee96/minimuxer.git
-    branch = develop
+    branch = backup-pr17-v1
 [submodule "Dependencies/SideSign"]
 	path = Dependencies/SideSign
 	url = https://github.com/lekhanh9/SideSign.git

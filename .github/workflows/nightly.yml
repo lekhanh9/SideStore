@@ -31,7 +31,8 @@ jobs:
       UPSTREAM_CHANNEL: ""
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
@@ -61,11 +62,12 @@ jobs:
           )
           echo "should_skip=$SHOULD_SKIP" >> $GITHUB_OUTPUT
 
-      - run: brew install ldid xcbeautify
+      - name: Install dependencies
         if: steps.build_gate.outputs.should_skip != 'true'
+        run: brew install ldid xcbeautify
 
       # --------------------------------------------------
-      # runtime env setup
+      # Runtime env setup
       # --------------------------------------------------
       - name: Setup Env
         if: steps.build_gate.outputs.should_skip != 'true'
@@ -114,10 +116,12 @@ jobs:
           key: xcode-build-cache-${{ github.ref_name }}-
 
       # --------------------------------------------------
-      # build and test
+      # Build and test
       # --------------------------------------------------
       - name: Clean
-        if: steps.build_gate.outputs.should_skip != 'true' && contains(github.event.head_commit.message, '[--clean-build]')
+        if: >
+          steps.build_gate.outputs.should_skip != 'true' &&
+          contains(github.event.head_commit.message, '[--clean-build]')
         run: |
           python3 scripts/ci/workflow.py clean
           python3 scripts/ci/workflow.py clean-derived-data
@@ -133,8 +137,8 @@ jobs:
           python3 scripts/ci/workflow.py boot-sim-async "iPhone 17 Pro"
 
       - name: Build
-        if: steps.build_gate.outputs.should_skip != 'true'
         id: build
+        if: steps.build_gate.outputs.should_skip != 'true'
         env:
           BUILD_LOG_ZIP_PASSWORD: ${{ secrets.BUILD_LOG_ZIP_PASSWORD }}
         run: |
@@ -144,11 +148,11 @@ jobs:
           exit $STATUS
 
       - name: Tests Build
+        id: test-build
         if: >
           steps.build_gate.outputs.should_skip != 'true' &&
           vars.ENABLE_TESTS == '1' &&
           vars.ENABLE_TESTS_BUILD == '1'
-        id: test-build
         env:
           BUILD_LOG_ZIP_PASSWORD: ${{ secrets.BUILD_LOG_ZIP_PASSWORD }}
         run: |
@@ -168,11 +172,11 @@ jobs:
           key: xcode-build-cache-${{ github.ref_name }}-${{ github.sha }}
 
       - name: Tests Run
+        id: test-run
         if: >
           steps.build_gate.outputs.should_skip != 'true' &&
           vars.ENABLE_TESTS == '1' &&
           vars.ENABLE_TESTS_RUN == '1'
-        id: test-run
         env:
           BUILD_LOG_ZIP_PASSWORD: ${{ secrets.BUILD_LOG_ZIP_PASSWORD }}
         run: |
@@ -181,15 +185,18 @@ jobs:
           exit $STATUS
 
       # --------------------------------------------------
-      # artifacts
+      # Artifacts
       # --------------------------------------------------
-      - uses: actions/upload-artifact@v4
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
         if: steps.build_gate.outputs.should_skip != 'true'
         with:
           name: build-logs-${{ env.MARKETING_VERSION }}.zip
           path: build-logs.zip
+          if-no-files-found: warn
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload tests build logs
+        uses: actions/upload-artifact@v4
         if: >
           steps.build_gate.outputs.should_skip != 'true' &&
           vars.ENABLE_TESTS == '1' &&
@@ -197,8 +204,10 @@ jobs:
         with:
           name: tests-build-logs-${{ env.SHORT_COMMIT }}.zip
           path: tests-build-logs.zip
+          if-no-files-found: warn
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload tests run logs
+        uses: actions/upload-artifact@v4
         if: >
           steps.build_gate.outputs.should_skip != 'true' &&
           vars.ENABLE_TESTS == '1' &&
@@ -206,19 +215,29 @@ jobs:
         with:
           name: tests-run-logs-${{ env.SHORT_COMMIT }}.zip
           path: tests-run-logs.zip
+          if-no-files-found: warn
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
         if: steps.build_gate.outputs.should_skip != 'true'
         with:
           name: SideStore-${{ env.MARKETING_VERSION }}.ipa
           path: SideStore.ipa
-      - uses: actions/upload-artifact@v4
+          if-no-files-found: warn
+
+      - name: Upload dSYMs
+        uses: actions/upload-artifact@v4
         if: steps.build_gate.outputs.should_skip != 'true'
         with:
           name: SideStore-${{ env.MARKETING_VERSION }}-dSYMs.zip
           path: SideStore.dSYMs.zip
+          if-no-files-found: warn
 
-      - uses: actions/checkout@v4
+      # --------------------------------------------------
+      # Metadata / deploy
+      # --------------------------------------------------
+      - name: Checkout apps-v2.json
+        uses: actions/checkout@v4
         if: steps.build_gate.outputs.should_skip != 'true' && env.DEPLOY_KEY != ''
         with:
           repository: "SideStore/apps-v2.json"
@@ -253,10 +272,9 @@ jobs:
             "$SOURCE_JSON" \
             "$CHANNEL" \
             "$MARKETING_VERSION"
-      
 
       # --------------------------------------------------
-      # upload release to GH
+      # Upload release to GitHub
       # --------------------------------------------------
       - name: Upload Release
         if: false
@@ -275,7 +293,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly-fork-16
-          name: "Nightly Fork 16
+          name: "Nightly Fork 16"
           body: |
             Fork build (iOS 16), patched minimuxer, and patched AnisetteKit/SideSign.
 

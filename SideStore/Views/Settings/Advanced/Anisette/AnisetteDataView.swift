@@ -229,7 +229,7 @@ class AnisetteDataViewModel: ObservableObject {
             return nil
         }
         
-        if let val = getValue(forKeys: ["client_info", "clientInfo", "X-Mme-Client-Info"]) {
+        if let val = getValue(forKeys: ["client_info", "clientInfo", "X-MMe-Client-Info", "X-Mme-Client-Info", "client-info"]) {
             clientInfo = val
         }
         if let val = getValue(forKeys: ["user_agent", "userAgent", "User-Agent"]) {

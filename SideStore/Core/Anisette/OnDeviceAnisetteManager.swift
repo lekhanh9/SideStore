@@ -73,12 +73,21 @@ public actor OnDeviceAnisetteManager {
             headers: headers
         )
 
-        // Explicitly guarantee that the returned AnisetteData carries the resolved clientInfo and userAgent
+        // Explicitly guarantee that the returned AnisetteData carries the resolved clientInfo and userAgent (needs proper testing)
         if let targetClientInfo = headers.clientInfo, !targetClientInfo.isEmpty {
             anisetteData.clientInfo = targetClientInfo
         }
         if let targetUserAgent = headers.userAgent, !targetUserAgent.isEmpty {
             anisetteData.userAgent = targetUserAgent
+        }
+        if let targetRouting = headers.routingInfo, !targetRouting.isEmpty {
+            anisetteData.routingInfo = targetRouting
+        } else if anisetteData.routingInfo.isEmpty {
+            anisetteData.routingInfo = "33883392"
+        }
+        if anisetteData.localUserID.isEmpty || anisetteData.localUserID.contains("0000000000") {
+            let devID = anisetteData.deviceID.isEmpty ? identifierUUID.uuidString.uppercased() : anisetteData.deviceID
+            anisetteData.localUserID = Data(devID.utf8).base64EncodedString()
         }
 
         if let freshBlob = newAdiPb {

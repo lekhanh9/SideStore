@@ -71,13 +71,6 @@ public enum AppConstants {
         public static let defaultClientInfo           = Constants.Anisette.defaultClientInfo
         public static let defaultUserAgent            = Constants.Anisette.defaultUserAgent
 
-        // Previous legacy defaults that saveConfig or UserDefaults may have persisted; migrated to defaultClientInfo on load
-        public static let legacyClientInfos: Set<String> = [
-            "<MacBookPro18,3> <macOS;26.6;25F84> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-            "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-            "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.iTunes/12.12.4.1)>",
-        ]
-
         public enum URLs {
             public static let grandSlamLookup = Constants.Anisette.URLs.grandSlamLookup
         }

@@ -71,8 +71,8 @@ public enum AppConstants {
         // GSA now rejects the legacy macOS client info used by third-party anisette with -80045 or 503.
         // Windows iTunes and Android identities are accepted by Apple GSA.
         // Defaulting to Windows iTunes 12.12.4 identity (matching anisette-v3-server and fortiva).
-        public static let defaultClientInfo           = "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.iTunes/12.12.4.1)>"
-        public static let defaultUserAgent            = "akd/1.0 CFNetwork/808.1.4"
+        public static let defaultClientInfo           = Constants.Anisette.defaultClientInfo
+        public static let defaultUserAgent            = Constants.Anisette.defaultUserAgent
 
         // Previous legacy defaults that saveConfig or UserDefaults may have persisted; migrated to defaultClientInfo on load
         public static let legacyClientInfos: Set<String> = [

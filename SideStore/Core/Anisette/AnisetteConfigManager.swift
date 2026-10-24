@@ -93,7 +93,7 @@ public actor AnisetteConfigManager {
         }
     }
     
-    public func loadServerHeaders() -> [String: String] {
+    public nonisolated func loadServerHeaders() -> [String: String] {
         if let data = try? Data(contentsOf: serverHeadersFileURL),
            let headers = try? Foundation.JSONDecoder().decode([String: String].self, from: data) {
             return headers

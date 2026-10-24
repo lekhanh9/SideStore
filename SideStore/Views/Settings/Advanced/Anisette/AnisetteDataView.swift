@@ -53,7 +53,7 @@ class AnisetteDataViewModel: ObservableObject {
         
         updateRawEditableJSON()
         
-        let serverHeaders = await AnisetteConfigManager.shared.loadServerHeaders()
+        let serverHeaders = AnisetteConfigManager.shared.loadServerHeaders()
         if let data = try? JSONSerialization.data(withJSONObject: serverHeaders, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]),
            let str = String(data: data, encoding: .utf8) {
             serverReturnedHeadersJSON = str
@@ -124,7 +124,7 @@ class AnisetteDataViewModel: ObservableObject {
     }
     
     func reset() async {
-        let config = await AnisetteConfigManager.shared.resetToDefaults()
+        let config = AnisetteConfigManager.shared.resetToDefaults()
         clientInfo = config.clientInfo
         userAgent = config.userAgent
         customDeviceID = ""
@@ -201,7 +201,7 @@ class AnisetteDataViewModel: ObservableObject {
             
             await AnisetteConfigManager.shared.saveServerHeaders(json)
             
-            let serverHeaders = await AnisetteConfigManager.shared.loadServerHeaders()
+            let serverHeaders = AnisetteConfigManager.shared.loadServerHeaders()
             if let data = try? JSONSerialization.data(withJSONObject: serverHeaders, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]),
                let str = String(data: data, encoding: .utf8) {
                 serverReturnedHeadersJSON = str
@@ -214,7 +214,7 @@ class AnisetteDataViewModel: ObservableObject {
     }
     
     func loadServerHeadersIntoOverrides() async {
-        let serverHeaders = await AnisetteConfigManager.shared.loadServerHeaders()
+        let serverHeaders = AnisetteConfigManager.shared.loadServerHeaders()
         guard !serverHeaders.isEmpty else {
             showToast(text: "No fetched headers found", detailText: "Fetch from server first.")
             return

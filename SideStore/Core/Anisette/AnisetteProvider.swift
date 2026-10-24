@@ -67,6 +67,14 @@ enum AnisetteProvider {
             AnisetteConfigManager.shared.anisetteAdiBlob = freshBlob.base64EncodedString()
         }
 
+        if !anisetteData.clientInfo.isEmpty {
+            await AnisetteConfigManager.shared.saveServerHeaders([
+                "client_info": anisetteData.clientInfo,
+                "user_agent": anisetteData.userAgent,
+                "X-Apple-I-MD-RINFO": anisetteData.routingInfo
+            ])
+        }
+
         return anisetteData
     }
 }

@@ -130,16 +130,38 @@ public actor AnisetteConfigManager {
             return config
         }()
 
+        let serverHeaders = loadServerHeaders()
+        let serverClientInfo = serverHeaders["client_info"] ?? serverHeaders["clientInfo"] ?? serverHeaders["X-MMe-Client-Info"] ?? serverHeaders["X-Mme-Client-Info"]
+        let serverUserAgent = serverHeaders["user_agent"] ?? serverHeaders["userAgent"] ?? serverHeaders["User-Agent"]
+        let serverRoutingInfo = serverHeaders["X-Apple-I-MD-RINFO"] ?? serverHeaders["routingInfo"] ?? serverHeaders["customRoutingInfo"]
+
         let rawClientInfo = (udClientInfo?.isEmpty == false ? udClientInfo : fileConfig?.clientInfo)
-        let resolvedClientInfo   = Self.normalizedClientInfo(rawClientInfo)
-        let resolvedUserAgent    = (udUserAgent?.isEmpty == false ? udUserAgent : fileConfig?.userAgent)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? AppConstants.Anisette.defaultUserAgent
+        var resolvedClientInfo = Self.normalizedClientInfo(rawClientInfo)
+        if resolvedClientInfo.isEmpty {
+            resolvedClientInfo = Self.normalizedClientInfo(serverClientInfo)
+        }
+        if resolvedClientInfo.isEmpty {
+            resolvedClientInfo = AppConstants.Anisette.defaultClientInfo
+        }
+
+        let rawUserAgent = (udUserAgent?.isEmpty == false ? udUserAgent : fileConfig?.userAgent)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        var resolvedUserAgent = rawUserAgent ?? ""
+        if resolvedUserAgent.isEmpty {
+            resolvedUserAgent = serverUserAgent?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        }
+        if resolvedUserAgent.isEmpty {
+            resolvedUserAgent = AppConstants.Anisette.defaultUserAgent
+        }
+
         let resolvedDeviceID     = (udDeviceID?.isEmpty == false ? udDeviceID : fileConfig?.customDeviceID)?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedLocalUserID  = (udLocalUserID?.isEmpty == false ? udLocalUserID : fileConfig?.customLocalUserID)?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedLocale       = (udLocale?.isEmpty == false ? udLocale : fileConfig?.customLocale)?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedTimeZone     = (udTimeZone?.isEmpty == false ? udTimeZone : fileConfig?.customTimeZone)?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedXcode        = (udXcodeVersion?.isEmpty == false ? udXcodeVersion : fileConfig?.customXcodeVersion)?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedSerialNumber = (udSerialNumber?.isEmpty == false ? udSerialNumber : fileConfig?.customSerialNumber)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedRoutingInfo  = (udRoutingInfo?.isEmpty == false ? udRoutingInfo : fileConfig?.customRoutingInfo)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let rawRoutingInfo = (udRoutingInfo?.isEmpty == false ? udRoutingInfo : fileConfig?.customRoutingInfo)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedRoutingInfo  = (rawRoutingInfo?.isEmpty == false ? rawRoutingInfo : serverRoutingInfo?.trimmingCharacters(in: .whitespacesAndNewlines))
 
         return AnisetteConfig(
             clientInfo: resolvedClientInfo,
@@ -154,16 +176,15 @@ public actor AnisetteConfigManager {
         )
     }
 
-    /// Persisted macOS defaults are now rejected by GSA (-80045 / 503), and a trailing newline
-    /// from pasting makes the auth endpoint return an empty response (0 bytes).
+    /// Trims whitespaces and sanitizes client info without hardcoding or rejecting valid OS profiles
     public static func normalizedClientInfo(_ clientInfo: String?) -> String {
-        let trimmed = clientInfo?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if trimmed.isEmpty ||
-            AppConstants.Anisette.legacyClientInfos.contains(trimmed) ||
-            trimmed.contains("MacBook") ||
-            trimmed.contains("macOS") ||
-            trimmed.contains("com.apple.dt.Xcode") {
-            return AppConstants.Anisette.defaultClientInfo
+        guard let clientInfo = clientInfo else { return "" }
+        var trimmed = clientInfo.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return ""
+        }
+        if trimmed.contains("com.apple.dt.Xcode") {
+            trimmed = trimmed.replacingOccurrences(of: "com.apple.dt.Xcode", with: "com.apple.akd")
         }
         return trimmed
     }
@@ -272,9 +293,18 @@ public actor AnisetteConfigManager {
         ud.customAnisetteRoutingInfo  = nil
         deleteConfigFile()
 
+        let serverHeaders = loadServerHeaders()
+        let serverClientInfo = serverHeaders["client_info"] ?? serverHeaders["clientInfo"] ?? serverHeaders["X-MMe-Client-Info"] ?? serverHeaders["X-Mme-Client-Info"]
+        let serverUserAgent = serverHeaders["user_agent"] ?? serverHeaders["userAgent"] ?? serverHeaders["User-Agent"]
+
+        let fallbackCI = Self.normalizedClientInfo(serverClientInfo)
+        let resolvedCI = fallbackCI.isEmpty ? AppConstants.Anisette.defaultClientInfo : fallbackCI
+        let fallbackUA = serverUserAgent?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let resolvedUA = fallbackUA.isEmpty ? AppConstants.Anisette.defaultUserAgent : fallbackUA
+
         let config = AnisetteConfig(
-            clientInfo: AppConstants.Anisette.defaultClientInfo,
-            userAgent: AppConstants.Anisette.defaultUserAgent
+            clientInfo: resolvedCI,
+            userAgent: resolvedUA
         )
         return config
     }

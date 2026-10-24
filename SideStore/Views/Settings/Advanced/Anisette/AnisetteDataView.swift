@@ -138,14 +138,6 @@ class AnisetteDataViewModel: ObservableObject {
         await save()
         showToast(text: "Reset to default configuration.")
     }
-
-    func applyPreset(clientInfo newClientInfo: String, userAgent newUserAgent: String, name: String) async {
-        clientInfo = newClientInfo
-        userAgent = newUserAgent
-        updateRawEditableJSON()
-        await save()
-        showToast(text: "Applied \(name) preset!")
-    }
     
     func importJSON(url: URL) async {
         isLoading = true
@@ -237,7 +229,7 @@ class AnisetteDataViewModel: ObservableObject {
             return nil
         }
         
-        if let val = getValue(forKeys: ["client_info", "clientInfo", "X-Mme-Client-Info"]) {
+        if let val = getValue(forKeys: ["client_info", "clientInfo", "X-MMe-Client-Info", "X-Mme-Client-Info", "client-info"]) {
             clientInfo = val
         }
         if let val = getValue(forKeys: ["user_agent", "userAgent", "User-Agent"]) {
@@ -327,48 +319,6 @@ struct AnisetteDataView: View {
                                 placeholder: AppConstants.Anisette.defaultUserAgent,
                                 isMultiline: true
                             )
-                            
-                            divider
-                            
-                            HStack {
-                                Text("Quick Presets")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(Color.white.opacity(0.65))
-                                Spacer()
-                                SwiftUI.Button("Pixel 7") {
-                                    Task {
-                                        await viewModel.applyPreset(
-                                            clientInfo: "<Pixel 7> <Android;14;UQ1A.240205.002> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-                                            userAgent: "AuthKit/1 (Macintosh; OS X 26.6) (com.apple.akd/1.0)",
-                                            name: "Android"
-                                        )
-                                    }
-                                }
-                                .font(.system(size: 12, weight: .bold))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.white.opacity(0.15))
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                                
-                                SwiftUI.Button("Windows") {
-                                    Task {
-                                        await viewModel.applyPreset(
-                                            clientInfo: "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.iTunes/12.12.4.1)>",
-                                            userAgent: "akd/1.0 CFNetwork/808.1.4",
-                                            name: "Windows"
-                                        )
-                                    }
-                                }
-                                .font(.system(size: 12, weight: .bold))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.white.opacity(0.15))
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
                         }
                         .background(Color.settingsRowBackground)
                         .cornerRadius(14)

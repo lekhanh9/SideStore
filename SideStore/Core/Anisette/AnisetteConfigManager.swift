@@ -161,7 +161,10 @@ public actor AnisetteConfigManager {
         let resolvedSerialNumber = (udSerialNumber?.isEmpty == false ? udSerialNumber : fileConfig?.customSerialNumber)?.trimmingCharacters(in: .whitespacesAndNewlines)
         
         let rawRoutingInfo = (udRoutingInfo?.isEmpty == false ? udRoutingInfo : fileConfig?.customRoutingInfo)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedRoutingInfo  = (rawRoutingInfo?.isEmpty == false ? rawRoutingInfo : serverRoutingInfo?.trimmingCharacters(in: .whitespacesAndNewlines))
+        var resolvedRoutingInfo  = (rawRoutingInfo?.isEmpty == false ? rawRoutingInfo : serverRoutingInfo?.trimmingCharacters(in: .whitespacesAndNewlines))
+        if resolvedRoutingInfo == nil || resolvedRoutingInfo?.isEmpty == true {
+            resolvedRoutingInfo = "33883392"
+        }
 
         return AnisetteConfig(
             clientInfo: resolvedClientInfo,
@@ -191,15 +194,18 @@ public actor AnisetteConfigManager {
 
     public func makeRequestHeaders() -> AnisetteRequestHeaders {
         let config = loadConfig()
+        let resolvedDevID = (config.customDeviceID?.isEmpty == false ? config.customDeviceID : nil) ?? resolveDeviceIdentifier().uuidString.uppercased()
+        let resolvedLU = (config.customLocalUserID?.isEmpty == false ? config.customLocalUserID : nil) ?? Data(resolvedDevID.utf8).base64EncodedString()
+        let resolvedRinfo = (config.customRoutingInfo?.isEmpty == false ? config.customRoutingInfo : nil) ?? "33883392"
         return AnisetteRequestHeaders().with {
             $0.clientInfo = config.clientInfo.isEmpty ? AppConstants.Anisette.defaultClientInfo : config.clientInfo
             $0.userAgent  = config.userAgent.isEmpty ? AppConstants.Anisette.defaultUserAgent : config.userAgent
-            if let customLU = config.customLocalUserID, !customLU.isEmpty { $0.localUserID = customLU }
-            if let customDev = config.customDeviceID, !customDev.isEmpty { $0.deviceID = customDev }
+            $0.deviceID = resolvedDevID
+            $0.localUserID = resolvedLU
+            $0.routingInfo = resolvedRinfo
             if let loc = config.customLocale, !loc.isEmpty { $0.locale = loc }
             if let tz = config.customTimeZone, !tz.isEmpty { $0.timeZone = tz }
             if let serial = config.customSerialNumber, !serial.isEmpty { $0.serialNumber = serial }
-            if let routing = config.customRoutingInfo, !routing.isEmpty { $0.routingInfo = routing }
         }
     }
 

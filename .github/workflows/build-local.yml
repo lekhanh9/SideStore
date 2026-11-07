@@ -1,0 +1,45 @@
+name: Build SideStore Local IPA
+
+on:
+  push:
+    branches: [local]
+  workflow_dispatch:
+
+concurrency:
+  group: local-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build SideStore IPA
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Install Build Tools
+        run: brew install ldid xcbeautify
+
+      - name: Setup Environment
+        run: |
+          MARKETING_VERSION=$(python3 scripts/ci/workflow.py get-marketing-version)
+          SHORT_COMMIT=$(git rev-parse --short HEAD)
+          NORMALIZED_VERSION="${MARKETING_VERSION}-local+${SHORT_COMMIT}"
+          python3 scripts/ci/workflow.py set-marketing-version "$NORMALIZED_VERSION"
+          echo "SHORT_COMMIT=$SHORT_COMMIT" | tee -a $GITHUB_ENV
+          echo "MARKETING_VERSION=$NORMALIZED_VERSION" | tee -a $GITHUB_ENV
+
+      - name: Build SideStore
+        run: |
+          python3 scripts/ci/workflow.py build
+          mv SideStore.ipa SideStore-${{ env.MARKETING_VERSION }}.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: SideStore-${{ env.MARKETING_VERSION }}.ipa
+          path: SideStore-${{ env.MARKETING_VERSION }}.ipa
+          retention-days: 14

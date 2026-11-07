@@ -390,7 +390,7 @@ struct AnisetteDataView: View {
                             
                             divider
                             
-                            Button(action: {
+                            SwiftUI.Button(action: {
                                 viewModel.regenerateHardwareIdentity()
                             }) {
                                 HStack {

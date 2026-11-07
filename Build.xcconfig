@@ -6,7 +6,7 @@ CURRENT_PROJECT_VERSION = 0700
 
 // Vars to be overwritten by `CodeSigning.xcconfig` if exists
 DEVELOPMENT_TEAM = S32Z3HMYVQ
-ORG_IDENTIFIER = com.SideStore
+ORG_IDENTIFIER = com.lekhanh09
 
 // Default is free for CI builds, override it using CodeSigning.xcconfig if required
 CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
@@ -16,8 +16,8 @@ CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
 
 PRODUCT_NAME = SideStore
 
-BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).SideStore
-MAIN_BUNDLE_IDENTIFIER[config=Debug]            = $(BASE_BUNDLE_ID).$(DEVELOPMENT_TEAM)
+BASE_BUNDLE_ID                                  = com.lekhanh09.sidestore
+MAIN_BUNDLE_IDENTIFIER[config=Debug]            = $(BASE_BUNDLE_ID)
 MAIN_BUNDLE_IDENTIFIER[config=Release]          = $(BASE_BUNDLE_ID)
 APP_GROUP_IDENTIFIER                            = $(MAIN_BUNDLE_IDENTIFIER)
 ICLOUD_CONTAINER_IDENTIFIER                     = iCloud.$(ORG_IDENTIFIER).$(PROJECT_NAME)

@@ -78,6 +78,7 @@
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
+		<string>sidestore-com.lekhanh09.sidestore</string>
 		<string>sidestore-com.SideStore.SideStore</string>
 		<string>sidestore-com.SideStore.SideStore.Beta</string>
 		<string>localdevvpn</string>
@@ -172,7 +173,7 @@
 	</array>
 	<key>OSLogPreferences</key>
 	<dict>
-		<key>com.SideStore.SideStore</key>
+		<key>com.lekhanh09.sidestore</key>
 		<dict>
 			<key>AltJIT</key>
 			<dict>

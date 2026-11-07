@@ -60,11 +60,18 @@ public actor OnDeviceAnisetteManager {
 
         let headers = await AnisetteConfigManager.shared.makeRequestHeaders()
 
-        let sourceURLString = UserDefaults.standard.menuAnisetteList.isEmpty ? AnisetteServersManager.defaultSource : UserDefaults.standard.menuAnisetteList
-        let sourceURL = URL(string: sourceURLString) ?? AppConstants.Anisette.defaultODAMetadataURL
-        let fallbackURL = AppConstants.Anisette.defaultODAMetadataURL
+        let config = await AnisetteConfigManager.shared.loadConfig()
 
-        let mode = AnisetteMode.remoteODA(sourceURL: sourceURL, fallbackURL: fallbackURL)
+        let mode: AnisetteMode
+        if config.anisetteEngine == "remote_oda" {
+            let sourceURLString = UserDefaults.standard.menuAnisetteList.isEmpty ? AnisetteServersManager.defaultSource : UserDefaults.standard.menuAnisetteList
+            let sourceURL = URL(string: sourceURLString) ?? AppConstants.Anisette.defaultODAMetadataURL
+            let fallbackURL = AppConstants.Anisette.defaultODAMetadataURL
+            mode = .remoteODA(sourceURL: sourceURL, fallbackURL: fallbackURL)
+        } else {
+            // Default to local MacAuth emulator
+            mode = .localMacAuth()
+        }
 
         var (anisetteData, newAdiPb) = try await provider.fetchAnisetteData(
             mode: mode,

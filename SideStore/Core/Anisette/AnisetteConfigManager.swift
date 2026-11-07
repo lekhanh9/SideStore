@@ -19,6 +19,9 @@ public struct AnisetteConfig: Codable, Equatable {
     public var customXcodeVersion: String?
     public var customSerialNumber: String?
     public var customRoutingInfo: String?
+    public var anisetteEngine: String?
+    public var selectedMacModel: String?
+    public var hardwareSeed: String?
     
     public init(
         clientInfo: String,
@@ -29,7 +32,10 @@ public struct AnisetteConfig: Codable, Equatable {
         customTimeZone: String? = nil,
         customXcodeVersion: String? = nil,
         customSerialNumber: String? = nil,
-        customRoutingInfo: String? = nil
+        customRoutingInfo: String? = nil,
+        anisetteEngine: String? = nil,
+        selectedMacModel: String? = nil,
+        hardwareSeed: String? = nil
     ) {
         self.clientInfo = clientInfo
         self.userAgent = userAgent
@@ -40,6 +46,9 @@ public struct AnisetteConfig: Codable, Equatable {
         self.customXcodeVersion = customXcodeVersion
         self.customSerialNumber = customSerialNumber
         self.customRoutingInfo = customRoutingInfo
+        self.anisetteEngine = anisetteEngine
+        self.selectedMacModel = selectedMacModel
+        self.hardwareSeed = hardwareSeed
     }
 }
 
@@ -121,6 +130,9 @@ public actor AnisetteConfigManager {
         let udXcodeVersion = ud.customAnisetteXcodeVersion
         let udSerialNumber = ud.customAnisetteSerialNumber
         let udRoutingInfo  = ud.customAnisetteRoutingInfo
+        let udEngine       = ud.customAnisetteEngine
+        let udMacModel     = ud.customAnisetteMacModel
+        let udSeed         = ud.customAnisetteHardwareSeed
 
         let fileConfig: AnisetteConfig? = {
             guard let data = try? Data(contentsOf: configFileURL),
@@ -175,7 +187,10 @@ public actor AnisetteConfigManager {
             customTimeZone: resolvedTimeZone,
             customXcodeVersion: resolvedXcode,
             customSerialNumber: resolvedSerialNumber,
-            customRoutingInfo: resolvedRoutingInfo
+            customRoutingInfo: resolvedRoutingInfo,
+            anisetteEngine: udEngine ?? fileConfig?.anisetteEngine ?? "macauth",
+            selectedMacModel: udMacModel ?? fileConfig?.selectedMacModel ?? "auto",
+            hardwareSeed: udSeed ?? fileConfig?.hardwareSeed
         )
     }
 
@@ -229,6 +244,9 @@ public actor AnisetteConfigManager {
         ud.customAnisetteXcodeVersion = config.customXcodeVersion
         ud.customAnisetteSerialNumber = config.customSerialNumber
         ud.customAnisetteRoutingInfo  = config.customRoutingInfo
+        ud.customAnisetteEngine       = config.anisetteEngine
+        ud.customAnisetteMacModel     = config.selectedMacModel
+        ud.customAnisetteHardwareSeed = config.hardwareSeed
     }
     
     public func importFromFile(url: URL) throws -> AnisetteConfig {
@@ -297,6 +315,9 @@ public actor AnisetteConfigManager {
         ud.customAnisetteXcodeVersion = nil
         ud.customAnisetteSerialNumber = nil
         ud.customAnisetteRoutingInfo  = nil
+        ud.customAnisetteEngine       = "macauth"
+        ud.customAnisetteMacModel     = "auto"
+        ud.customAnisetteHardwareSeed = nil
         deleteConfigFile()
 
         let serverHeaders = loadServerHeaders()
@@ -310,7 +331,9 @@ public actor AnisetteConfigManager {
 
         let config = AnisetteConfig(
             clientInfo: resolvedCI,
-            userAgent: resolvedUA
+            userAgent: resolvedUA,
+            anisetteEngine: "macauth",
+            selectedMacModel: "auto"
         )
         return config
     }

@@ -24,6 +24,8 @@ class AnisetteDataViewModel: ObservableObject {
     @Published var customSerialNumber: String = ""
     @Published var customRoutingInfo: String = ""
     @Published var customXcodeVersion: String = ""
+    @Published var selectedEngine: String = "macauth"
+    @Published var selectedMacModel: String = "auto"
     
     @Published var isOfflineMode: Bool = false
     @Published var isLoading: Bool = false
@@ -50,6 +52,8 @@ class AnisetteDataViewModel: ObservableObject {
         customSerialNumber = config.customSerialNumber ?? ""
         customRoutingInfo = config.customRoutingInfo ?? ""
         customXcodeVersion = config.customXcodeVersion ?? ""
+        selectedEngine = config.anisetteEngine ?? "macauth"
+        selectedMacModel = config.selectedMacModel ?? "auto"
         
         updateRawEditableJSON()
         
@@ -90,7 +94,9 @@ class AnisetteDataViewModel: ObservableObject {
             customTimeZone: customTimeZone.isEmpty ? nil : customTimeZone,
             customXcodeVersion: customXcodeVersion.isEmpty ? nil : customXcodeVersion,
             customSerialNumber: customSerialNumber.isEmpty ? nil : customSerialNumber,
-            customRoutingInfo: customRoutingInfo.isEmpty ? nil : customRoutingInfo
+            customRoutingInfo: customRoutingInfo.isEmpty ? nil : customRoutingInfo,
+            anisetteEngine: selectedEngine,
+            selectedMacModel: selectedMacModel
         )
         await AnisetteConfigManager.shared.saveConfig(config)
         updateRawEditableJSON()
@@ -134,9 +140,57 @@ class AnisetteDataViewModel: ObservableObject {
         customSerialNumber = ""
         customRoutingInfo = ""
         customXcodeVersion = ""
+        selectedEngine = "macauth"
+        selectedMacModel = "auto"
         updateRawEditableJSON()
         await save()
         showToast(text: "Reset to default configuration.")
+    }
+
+    struct MacHardwareTemplate {
+        let model: String
+        let osVersion: String
+        let osBuild: String
+        let darwinVersion: String
+        let cfnetworkVersion: String
+        let xcodeVersion: String
+        let modelCode: String
+    }
+
+    private static let hardwareTemplates: [MacHardwareTemplate] = [
+        MacHardwareTemplate(model: "MacBookPro18,1", osVersion: "13.5", osBuild: "22G90", darwinVersion: "22.6.0", cfnetworkVersion: "1410.0.3", xcodeVersion: "14.3.1", modelCode: "MD6R"),
+        MacHardwareTemplate(model: "MacBookAir10,1", osVersion: "13.5", osBuild: "22G90", darwinVersion: "22.6.0", cfnetworkVersion: "1410.0.3", xcodeVersion: "14.3.1", modelCode: "Q6LR"),
+        MacHardwareTemplate(model: "Macmini9,1", osVersion: "13.5", osBuild: "22G90", darwinVersion: "22.6.0", cfnetworkVersion: "1410.0.3", xcodeVersion: "14.3.1", modelCode: "J5X6"),
+        MacHardwareTemplate(model: "Mac14,2", osVersion: "14.4.1", osBuild: "23E224", darwinVersion: "23.4.0", cfnetworkVersion: "1494.0.7", xcodeVersion: "15.3", modelCode: "LK12"),
+        MacHardwareTemplate(model: "Mac15,3", osVersion: "14.5", osBuild: "23F79", darwinVersion: "23.5.0", cfnetworkVersion: "1496.0.7", xcodeVersion: "15.4", modelCode: "N83K")
+    ]
+
+    func regenerateHardwareIdentity() {
+        let tmpl: MacHardwareTemplate
+        if selectedMacModel != "auto", let match = Self.hardwareTemplates.first(where: { $0.model == selectedMacModel }) {
+            tmpl = match
+        } else {
+            tmpl = Self.hardwareTemplates.randomElement()!
+        }
+
+        let charset = Array("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ")
+        var randomSuffix = ""
+        for _ in 0..<4 {
+            if let c = charset.randomElement() { randomSuffix.append(c) }
+        }
+        let serial = "C02\(randomSuffix)\(tmpl.modelCode)"
+        let newUUID = UUID().uuidString.uppercased()
+
+        clientInfo = "<\(tmpl.model)> <Mac OS X;\(tmpl.osVersion);\(tmpl.osBuild)> <com.apple.AuthKit/1 (com.apple.dt.Xcode/\(tmpl.xcodeVersion))>"
+        userAgent = "akd/1.0 CFNetwork/\(tmpl.cfnetworkVersion) Darwin/\(tmpl.darwinVersion)"
+        customSerialNumber = serial
+        customDeviceID = newUUID
+        customRoutingInfo = "17106176"
+
+        Task {
+            await save()
+        }
+        showToast(text: "Hardware Identity Regenerated", detailText: "Configured \(tmpl.model) profile.")
     }
     
     func importJSON(url: URL) async {
@@ -297,6 +351,66 @@ struct AnisetteDataView: View {
                 .padding(.top, 4)
                 
                 if viewModel.viewMode == 0 {
+                    // SECTION 0: HARDWARE EMULATION
+                    VStack(alignment: .leading, spacing: 8) {
+                        sectionHeader("HARDWARE EMULATION")
+                        
+                        VStack(spacing: 0) {
+                            HStack {
+                                Text("Engine")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Picker("Engine", selection: $viewModel.selectedEngine) {
+                                    Text("MacAuth (Offline)").tag("macauth")
+                                    Text("Remote ODA").tag("remote_oda")
+                                }
+                                .pickerStyle(.menu)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            
+                            divider
+                            
+                            HStack {
+                                Text("Mac Model")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Picker("Mac Model", selection: $viewModel.selectedMacModel) {
+                                    Text("Automatic").tag("auto")
+                                    Text("MacBook Pro 16\" (M1 Pro)").tag("MacBookPro18,1")
+                                    Text("MacBook Air 13\" (M1)").tag("MacBookAir10,1")
+                                    Text("Mac mini (M1)").tag("Macmini9,1")
+                                    Text("Mac14,2 (M2)").tag("Mac14,2")
+                                    Text("Mac15,3 (M3)").tag("Mac15,3")
+                                }
+                                .pickerStyle(.menu)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            
+                            divider
+                            
+                            Button(action: {
+                                viewModel.regenerateHardwareIdentity()
+                            }) {
+                                HStack {
+                                    Label("Regenerate Hardware Identity", systemImage: "arrow.triangle.2.circlepath")
+                                        .foregroundColor(.accentColor)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                            }
+                        }
+                        .background(Color.settingsRowBackground)
+                        .cornerRadius(14)
+                        
+                        Text("Each installation maintains a persistent virtual Mac profile to prevent Apple ID security challenges. Regenerating hardware profile assigns a new serial and hardware UUID.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 16)
+                    }
+                    
                     // SECTION 1: PRIMARY CLIENT HEADERS
                     VStack(alignment: .leading, spacing: 8) {
                         sectionHeader("PRIMARY CLIENT HEADERS")

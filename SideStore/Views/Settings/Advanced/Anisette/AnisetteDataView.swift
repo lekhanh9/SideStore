@@ -24,7 +24,7 @@ class AnisetteDataViewModel: ObservableObject {
     @Published var customSerialNumber: String = ""
     @Published var customRoutingInfo: String = ""
     @Published var customXcodeVersion: String = ""
-    @Published var selectedEngine: String = "macauth"
+    @Published var selectedEngine: String = "remote_oda"
     @Published var selectedMacModel: String = "auto"
     
     @Published var isOfflineMode: Bool = false
@@ -52,7 +52,7 @@ class AnisetteDataViewModel: ObservableObject {
         customSerialNumber = config.customSerialNumber ?? ""
         customRoutingInfo = config.customRoutingInfo ?? ""
         customXcodeVersion = config.customXcodeVersion ?? ""
-        selectedEngine = config.anisetteEngine ?? "macauth"
+        selectedEngine = config.anisetteEngine ?? "remote_oda"
         selectedMacModel = config.selectedMacModel ?? "auto"
         
         updateRawEditableJSON()
@@ -140,7 +140,7 @@ class AnisetteDataViewModel: ObservableObject {
         customSerialNumber = ""
         customRoutingInfo = ""
         customXcodeVersion = ""
-        selectedEngine = "macauth"
+        selectedEngine = "remote_oda"
         selectedMacModel = "auto"
         updateRawEditableJSON()
         await save()

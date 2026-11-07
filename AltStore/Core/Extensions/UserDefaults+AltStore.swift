@@ -97,7 +97,7 @@ public extension UserDefaults
         set { self.set(newValue, forKey: #function) }
     }
     @objc var customAnisetteEngine: String? {
-        get { self.string(forKey: #function) ?? "macauth" }
+        get { self.string(forKey: #function) ?? "remote_oda" }
         set { self.set(newValue, forKey: #function) }
     }
     @objc var customAnisetteMacModel: String? {

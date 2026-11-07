@@ -188,7 +188,7 @@ public actor AnisetteConfigManager {
             customXcodeVersion: resolvedXcode,
             customSerialNumber: resolvedSerialNumber,
             customRoutingInfo: resolvedRoutingInfo,
-            anisetteEngine: udEngine ?? fileConfig?.anisetteEngine ?? "macauth",
+            anisetteEngine: udEngine ?? fileConfig?.anisetteEngine ?? "remote_oda",
             selectedMacModel: udMacModel ?? fileConfig?.selectedMacModel ?? "auto",
             hardwareSeed: udSeed ?? fileConfig?.hardwareSeed
         )
@@ -315,7 +315,7 @@ public actor AnisetteConfigManager {
         ud.customAnisetteXcodeVersion = nil
         ud.customAnisetteSerialNumber = nil
         ud.customAnisetteRoutingInfo  = nil
-        ud.customAnisetteEngine       = "macauth"
+        ud.customAnisetteEngine       = "remote_oda"
         ud.customAnisetteMacModel     = "auto"
         ud.customAnisetteHardwareSeed = nil
         deleteConfigFile()
@@ -332,7 +332,7 @@ public actor AnisetteConfigManager {
         let config = AnisetteConfig(
             clientInfo: resolvedCI,
             userAgent: resolvedUA,
-            anisetteEngine: "macauth",
+            anisetteEngine: "remote_oda",
             selectedMacModel: "auto"
         )
         return config

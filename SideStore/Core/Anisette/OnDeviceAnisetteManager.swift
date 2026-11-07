@@ -74,12 +74,22 @@ public actor OnDeviceAnisetteManager {
             mode = .remoteODA(sourceURL: sourceURL, fallbackURL: fallbackURL)
         }
 
-        var (anisetteData, newAdiPb) = try await provider.fetchAnisetteData(
-            mode: mode,
-            identifier: identifierUUID,
-            existingAdiBlob: existingAdiPbData,
-            headers: headers
-        )
+        var anisetteData: AnisetteData
+        var newAdiPb: Data?
+        do {
+            (anisetteData, newAdiPb) = try await provider.fetchAnisetteData(
+                mode: mode,
+                identifier: identifierUUID,
+                existingAdiBlob: existingAdiPbData,
+                headers: headers
+            )
+        } catch {
+            if existingAdiPbData != nil {
+                debugLog("[OnDeviceAnisetteManager] [Fetch] ODA failed with existing adi.pb (\(error.localizedDescription)). Purging stale adi.pb from Keychain...")
+                AnisetteConfigManager.shared.anisetteAdiBlob = nil
+            }
+            throw error
+        }
 
         // Explicitly guarantee that the returned AnisetteData carries the resolved clientInfo and userAgent (needs proper testing)
         if let targetClientInfo = headers.clientInfo, !targetClientInfo.isEmpty {

@@ -7,5 +7,5 @@
 [submodule "Dependencies/SideSign"]
 	path = Dependencies/SideSign
 	url = https://github.com/lekhanh9/SideSign.git
-	branch = main
+	branch = local
 

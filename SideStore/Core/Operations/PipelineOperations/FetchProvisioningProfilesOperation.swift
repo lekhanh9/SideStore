@@ -324,12 +324,13 @@ private extension FetchProvisioningProfilesOperation{
         if targetAppBundle.isAltStoreApp {
             verboseLog("[FetchProvisioningProfiles] Application groups before modifying for SideStore: \(applicationGroups)")
             
-            // Remove app groups that contain AltStore since they can be problematic (cause SideStore to expire early)
-            for (index, group) in applicationGroups.enumerated() {
-                if group.contains("AltStore") {
-                    verboseLog("[FetchProvisioningProfiles] Removing application group: \(group)")
-                    applicationGroups.remove(at: index)
+            // Remove app groups that contain AltStore or legacy SideStore since they can be problematic (cause SideStore to expire early)
+            applicationGroups.removeAll { group in
+                if group.contains("AltStore") || group.contains("com.SideStore.SideStore") {
+                    self.verboseLog("[FetchProvisioningProfiles] Removing application group: \(group)")
+                    return true
                 }
+                return false
             }
             
             // Make sure we add .AltWidget for the widget

@@ -34,7 +34,7 @@ jobs:
 
       - name: Build SideStore
         run: |
-          python3 scripts/ci/workflow.py build
+          python3 scripts/ci/workflow.py build || (echo "=== FULL BUILD LOG ===" && cat build/logs/build.log && exit 1)
           mv SideStore.ipa SideStore-${{ env.MARKETING_VERSION }}.ipa
 
       - name: Upload IPA

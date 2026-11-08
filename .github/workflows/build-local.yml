@@ -34,8 +34,16 @@ jobs:
 
       - name: Build SideStore
         run: |
-          python3 scripts/ci/workflow.py build || (echo "=== FULL BUILD LOG ===" && cat build/logs/build.log && exit 1)
+          python3 scripts/ci/workflow.py build
           mv SideStore.ipa SideStore-${{ env.MARKETING_VERSION }}.ipa
+
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build/logs/
+          retention-days: 7
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4

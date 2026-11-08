@@ -64,8 +64,9 @@ public actor OnDeviceAnisetteManager {
 
         let mode: AnisetteMode
         if config.anisetteEngine == "macauth" {
-            // Local MacAuth emulator
+            // Local MacAuth emulator (macOS akd emulation; do not pass stale Linux adi.pb from Keychain)
             mode = .localMacAuth()
+            existingAdiPbData = nil
         } else {
             // Default to Remote ODA
             let sourceURLString = UserDefaults.standard.menuAnisetteList.isEmpty ? AnisetteServersManager.defaultSource : UserDefaults.standard.menuAnisetteList
@@ -87,6 +88,8 @@ public actor OnDeviceAnisetteManager {
             if existingAdiPbData != nil {
                 debugLog("[OnDeviceAnisetteManager] [Fetch] ODA failed with existing adi.pb (\(error.localizedDescription)). Purging stale adi.pb from Keychain...")
                 AnisetteConfigManager.shared.anisetteAdiBlob = nil
+                debugLog("[OnDeviceAnisetteManager] [Fetch] Retrying with fresh in-memory provisioning...")
+                return try await fetchAnisetteData()
             }
             throw error
         }
